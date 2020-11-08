@@ -3,38 +3,44 @@ using System.Collections;
 
 namespace DigitalClockKata.UnitTests
 {
-    public interface ClockObserver
+    public interface Observer
     {
-        void Update(int hours, int minutes, int seconds);
+        void Update();
     }
 
-    public abstract class TimeSource
+    public abstract class Subject
     {
         private ArrayList itsObservers = new ArrayList();
 
-        protected void Notify(int hours, int mins, int secs)
+        protected void NotifyObservers()
         {
-            foreach (ClockObserver observer in itsObservers)
-                observer.Update(hours, mins, secs);
+            foreach (Observer observer in itsObservers)
+                observer.Update();
         }
 
-        public void RegisterObserver(ClockObserver observer)
+        public void RegisterObserver(Observer observer)
         {
             itsObservers.Add(observer);
         }
     }
 
-    internal class MockTimeSink : ClockObserver
+    internal class MockTimeSink : Observer
     {
         private int itsHours;
         private int itsMinutes;
         private int itsSeconds;
+        private TimeSource itsSource;
 
-        public void Update(int hours, int minutes, int seconds)
+        public MockTimeSink(TimeSource source)
         {
-            itsHours = hours;
-            itsMinutes = minutes;
-            itsSeconds = seconds;
+            itsSource = source;
+        }
+
+        public void Update()
+        {
+            itsHours = itsSource.GetHours();
+            itsMinutes = itsSource.GetMinutes();
+            itsSeconds = itsSource.GetSeconds();
         }
 
         internal int GetHours() => itsHours;
@@ -44,11 +50,31 @@ namespace DigitalClockKata.UnitTests
         internal int GetSeconds() => itsSeconds;
     }
 
-    internal class MockTimeSource : TimeSource
+    internal class MockTimeSource : Subject, TimeSource
     {
+        private int itsHours;
+        private int itsMinutes;
+        private int itsSeconds;
         internal void SetTime(int hours, int minutes, int seconds)
         {
-            Notify(hours, minutes, seconds);
+            itsHours = hours;
+            itsMinutes = minutes;
+            itsSeconds = seconds;
+            NotifyObservers();
         }
+        public int GetHours() => itsHours;
+
+        public int GetMinutes() => itsMinutes;
+
+        public int GetSeconds() => itsSeconds;
+    }
+
+    public interface TimeSource
+    {
+        int GetHours();
+
+        int GetMinutes();
+
+        int GetSeconds();
     }
 }
