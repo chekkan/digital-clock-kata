@@ -1,30 +1,54 @@
 using System;
+using System.Collections;
 
 namespace DigitalClockKata.UnitTests
 {
-    public class ClockDriver
+    public interface ClockObserver
     {
-        private TimeSink sink;
+        void Update(int hours, int minutes, int seconds);
+    }
 
-        public ClockDriver(TimeSource source, TimeSink sink)
+    public abstract class TimeSource
+    {
+        private ArrayList itsObservers = new ArrayList();
+
+        protected void Notify(int hours, int mins, int secs)
         {
-            source.SetDriver(this);
-            this.sink = sink;
+            foreach (ClockObserver observer in itsObservers)
+                observer.Update(hours, mins, secs);
         }
 
-        internal void Update(int hours, int minutes, int seconds)
+        public void RegisterObserver(ClockObserver observer)
         {
-            sink.SetTime(hours, minutes, seconds);
+            itsObservers.Add(observer);
         }
     }
 
-    public interface TimeSink
+    internal class MockTimeSink : ClockObserver
     {
-        void SetTime(int hours, int minutes, int seconds);
+        private int itsHours;
+        private int itsMinutes;
+        private int itsSeconds;
+
+        public void Update(int hours, int minutes, int seconds)
+        {
+            itsHours = hours;
+            itsMinutes = minutes;
+            itsSeconds = seconds;
+        }
+
+        internal int GetHours() => itsHours;
+
+        internal int GetMinutes() => itsMinutes;
+
+        internal int GetSeconds() => itsSeconds;
     }
 
-    public interface TimeSource
+    internal class MockTimeSource : TimeSource
     {
-        void SetDriver(ClockDriver clockDriver);
+        internal void SetTime(int hours, int minutes, int seconds)
+        {
+            Notify(hours, minutes, seconds);
+        }
     }
 }
